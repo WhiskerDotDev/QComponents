@@ -10,6 +10,7 @@
 #include <QSGTexture>
 #include <QSGSimpleTextureNode>
 #include "ImageSource.hpp"
+#include "ImageNode.hpp"
 
 class Q_GPURenderedImage : public QQuickItem{
     Q_OBJECT
@@ -23,12 +24,7 @@ public:
         QObject::connect(this, &QQuickItem::xChanged, [this](){
             this ->update(/*this->boundingRect().toRect()*/);
         });
-        // QObject::connect(this, &QQuickItem::widthChanged, [this](){
-        //     boundingrect = boundingRect().toRect();
-        // });
-        // QObject::connect(this, &QQuickItem::heightChanged, [this](){
-        //     boundingrect = boundingRect().toRect();
-        // });
+
     }
 
     Q_SIGNAL void imgSrcChanged();
@@ -37,22 +33,22 @@ public:
         // qDebug() <<ptr;
         // Q_ImageSource* ptr_converted = qobject_cast<Q_ImageSource*>(ptr);
         if(m_src_ptr != ptr){m_src_ptr = ptr; emit imgSrcChanged();}
-        img_cpy = m_src_ptr->requestFrame(0);
+        img_cpy = m_src_ptr->requestFrame(-1);
     }
 protected:
     QSGNode* updatePaintNode(QSGNode* node, UpdatePaintNodeData *updatePaintNodeData )override{
         tmr.start();
-        // if(! node)node = new QSGNode();
-        // node ->removeAllChildNodes();
-        QSGSimpleTextureNode* texnode = static_cast<QSGSimpleTextureNode*>(node);
-        if(!texnode) texnode = new QSGSimpleTextureNode;
-        QSGTexture *texture = window()->createTextureFromImage(m_src_ptr->requestFrame(0), QQuickWindow::TextureHasAlphaChannel);
-        texnode->setOwnsTexture(true);
-        texnode->setRect(boundingRect());
+        if(! node)node = new QSGNode();
+        node ->removeAllChildNodes();
+        // Q_ImageNode* texnode = static_cast<Q_ImageNode*>(node);
+        auto texnode = new Q_ImageNode(m_src_ptr->requestFrame(-1), this);
+        // QSGTexture *texture = window()->createTextureFromImage(m_src_ptr->requestFrame(-1));
+        // texnode->setOwnsTexture(true);
+        // texnode->setRect(boundingRect());
         // node->set
+        // texnode->setTexture(texture);
+        node ->appendChildNode(texnode);
         texnode->markDirty(QSGNode::DirtyForceUpdate);
-        texnode->setTexture(texture);
-        // node ->appendChildNode(texnode);
         qDebug()<< tmr.nsecsElapsed();
         tmr.invalidate();
 

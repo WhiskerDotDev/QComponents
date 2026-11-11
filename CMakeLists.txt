@@ -44,6 +44,7 @@ qt_add_qml_module(QComponentsproj
     ImageSource.hpp
     CpuRenderedImage.hpp
     GpuRenderedImage.hpp
+    ImageNode.hpp
 
     DEPENDENCIES
     QtQuick
