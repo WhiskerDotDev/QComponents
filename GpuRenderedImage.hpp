@@ -1,5 +1,6 @@
 // THIS CLASS IS MOSTLY FOR TESTING PURPOSES.
 
+#define EXPERIMENTAL_USAGE
 #pragma once
 #include <qqml.h>
 #include <QObject>
@@ -38,21 +39,36 @@ public:
 protected:
     QSGNode* updatePaintNode(QSGNode* node, UpdatePaintNodeData *updatePaintNodeData )override{
         tmr.start();
+
+#ifdef EXPERIMENTAL_USAGE
         if(! node)node = new QSGNode();
         node ->removeAllChildNodes();
-        // Q_ImageNode* texnode = static_cast<Q_ImageNode*>(node);
-        auto texnode = new Q_ImageNode(m_src_ptr->requestFrame(-1), this);
-        // QSGTexture *texture = window()->createTextureFromImage(m_src_ptr->requestFrame(-1));
-        // texnode->setOwnsTexture(true);
-        // texnode->setRect(boundingRect());
-        // node->set
-        // texnode->setTexture(texture);
-        node ->appendChildNode(texnode);
+        Q_ImageNode* texnode = new Q_ImageNode(m_src_ptr->requestFrame(-1), this, true);
         texnode->markDirty(QSGNode::DirtyForceUpdate);
+        node ->appendChildNode(texnode);
+        // node->markDirty(QSGNode::DirtyStateBit::DirtyNodeAdded);
+#else
+        QSGSimpleTextureNode* texnode = static_cast<QSGSimpleTextureNode*>(node);
+        if(!texnode) texnode = new QSGSimpleTextureNode;
+        QSGTexture *texture = window()->createTextureFromImage(m_src_ptr->requestFrame(-1), QQuickWindow::TextureHasAlphaChannel);
+        texnode->setOwnsTexture(true);
+        // texnode->setSourceRect(QRectF(0,0,2,2));
+        texnode->setRect(boundingRect().toRect());
+        texnode->markDirty(QSGNode::DirtyStateBit::DirtyMaterial);
+        texnode->setTexture(texture);
+#endif
+
+        // Q_ImageNode* texnode = static_cast<Q_ImageNode*>(node);
+        // node->set
+
         qDebug()<< tmr.nsecsElapsed();
         tmr.invalidate();
-
+#ifdef EXPERIMENTAL_USAGE
+        return node;
+#else
         return texnode;
+#endif
+
     }
 
 
@@ -60,6 +76,6 @@ private:
     QImage img_cpy;
     // QSGTexture* tex;
     // QRect boundingrect = this ->boundingRect().toRect();
-    Q_ImageSource* m_src_ptr = nullptr;
+    Q_ImageSource*m_src_ptr;
     QElapsedTimer tmr;
 };

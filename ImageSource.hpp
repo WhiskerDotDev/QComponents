@@ -19,31 +19,13 @@ class Q_ImageSource : public QObject{
     QML_NAMED_ELEMENT(ImageSource)
 
 public:
-    Q_ImageSource(QQuickItem* parent){
-
-        QObject::connect(this, &Q_ImageSource::pathReady, this, [&](){
-            QString* old = this ->m_resourcePathptr;
-            m_resourcePathptr = nullptr;
-            delete old;
-            m_resourcePathptr = new QString(path);
-            m_resourcePath = m_resourcePathptr->right( m_resourcePathptr->length() - m_resourcePathptr->lastIndexOf("\\") );
-            m_resourcePathptr ->clear();
-        });
-
-        GetModuleFileNameW(NULL, path, MAX_PATH);
-        emit this->pathReady();
-
-    }
 
     const QImage requestFrame(qint64 idx){
-        if(m_frames.length() < idx || idx < 0){
-            err_img.setColor(1, m_errclr1.rgb());
-            err_img.setColor(2, m_errclr2.rgb());
+
+        if(m_frames.length() < idx || idx < 0)
             return err_img;
-        }
         return static_cast<const QImage>(m_frames[idx]);
-        // return QImage();
-    }
+        }
 
     void readFrames(){
         if(m_filename.isEmpty() || m_filename.isNull()) {
@@ -71,14 +53,32 @@ public:
         }
     }
 
-    Q_ImageSource(QObject* parent = nullptr){
-        this ->readFrames();
-    }
-
     void setFileName(const QString& other){
         m_filename.clear();
         m_filename = other;
     }
+
+    Q_ImageSource(QObject* parent = nullptr){
+        err_img.setColorCount(2);
+        err_img.setColor(1, m_errclr2.rgb());
+        err_img.setColor(0, m_errclr1.rgb());
+
+        DWORD bytesWritten =  GetModuleFileNameW(NULL, path, MAX_PATH);
+        qDebug()<<"PATH: " << bytesWritten;
+        qDebug()<< QString(path);
+
+        QObject::connect(this, &Q_ImageSource::pathReady, this, [&](){
+            delete this->m_resourcePathptr;
+            this -> m_resourcePathptr = new QString(path);
+            m_resourcePath = m_resourcePathptr->left(m_resourcePathptr->lastIndexOf("\\")  + 1);
+            m_resourcePathptr ->clear();
+            qDebug() << "EVAL RESOURCE PATH: "<< m_resourcePath;
+        });
+
+        emit this->pathReady();
+        this ->readFrames();
+    }
+
 
 
 private:
@@ -92,7 +92,7 @@ private:
     QImageReader m_reader;
     QColor m_errclr1 = QColor(0,0,0,255);
     QColor m_errclr2 = QColor(255, 60, 255, 255);
-    uchar m_errData[6] =  {2, 1, 2,1,1,2}; // Why did this combination work..?
+    uchar m_errData[6] =  {1,0, 1,0,0,1}; // Why did this combination work..?
     QImage err_img = QImage(m_errData, 2,  2,  QImage::Format::Format_Indexed8);
 
 

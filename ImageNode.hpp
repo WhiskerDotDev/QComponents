@@ -8,14 +8,16 @@
 
 class Q_ImageNode : public QSGSimpleTextureNode{
 public:
-    inline void setTextureFromImage(const QImage& img, QQuickItem* contextItem){
+    void setTextureFromImage(const QImage& img, QQuickItem* contextItem){
         if(contextItem != nullptr){
-            QSGTexture* tex = contextItem->window()->createTextureFromImage(img);
+            // qDebug() <<"proceeding!";
+            QSGTexture* tex = contextItem->window()->createTextureFromImage(img, QQuickWindow::CreateTextureOption::TextureHasAlphaChannel);
             this->setTexture(tex);
+            // qDebug()<<tex;
         }
     }
-    Q_ImageNode(QQuickItem* contextItem =nullptr, QSGTexture* tex =nullptr, QRect override_rect = QRect(-1, -1, -1, -1) ){
-        // contextItem = contextItem;
+    Q_ImageNode(QQuickItem* contextItem =nullptr, QSGTexture* tex =nullptr, const bool ownsTexture = false, QRect override_rect = QRect(-1, -1, -1, -1) ) {
+        this ->setOwnsTexture(ownsTexture);
         if( override_rect == QRect(-1,-1,-1,-1) ) {
             this ->setRect( contextItem->boundingRect().toRect() ); }
         else
@@ -23,8 +25,10 @@ public:
         // tex = tex;
         this->setTexture(tex);
     }
-    Q_ImageNode(const QImage& img, QQuickItem* contextItem =nullptr,const QRect override_rect = QRect(-1, -1, -1, -1) ){
-        contextItem = contextItem;
+    Q_ImageNode(const QImage& img, QQuickItem* contextItem =nullptr, const bool ownsTexture = false, const QRect override_rect = QRect(-1, -1, -1, -1) ){
+        this ->setOwnsTexture(ownsTexture);
+        // this->setSourceRect(QRectF(0.0, 0.0, 1.0,1.0));
+        // qDebug()<<this->sourceRect();
         if( override_rect == QRect(-1,-1,-1,-1) ) {
             this ->setRect( contextItem->boundingRect().toRect() ); }
         else
