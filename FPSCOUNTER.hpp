@@ -60,6 +60,7 @@ public:
     //FPS FUNCS:
     Q_SIGNAL void fpsChanged();
     float getFPS(){
+    alignas(16) __m128 floatVector{0.0f, 0.0f, 0.0f, 0.0f};
     // floatVector = _mm_set_ps1(0.0f);
     _mm_cvt_si2ss(floatVector, m_currentFPSCOUNT);
     return (  _mm_cvtss_f32(floatVector) / ( m_interval / m_thousand ) ) ;}
@@ -111,7 +112,6 @@ protected:
     }
 
 private:
-    alignas(16) __m128 floatVector{0.0f, 0.0f, 0.0f, 0.0f};
     alignas(8) QQuickWindow* m_wnd = nullptr; // expects parent to be a QQuickWIndow
     /*qobject_cast<QQuickWindow*>(this->parent())*/
 
